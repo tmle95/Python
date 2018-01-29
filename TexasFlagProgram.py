@@ -1,4 +1,4 @@
-"""Tony-Trong Le Assignment #2 COSC 1306 MW 2:30-4:00 Fall 2016 The Texas Flag on Turtle Python"""
+The Texas Flag on Turtle Python
 
 import turtle
 wn = turtle.Screen()
