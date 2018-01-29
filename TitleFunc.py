@@ -1,8 +1,4 @@
-"""Tony-Trong Le
-Assignment #3
-COSC 1306 MW 2:30-4:00
-Fall 2016
-Your own title() function"""
+"""Your own title() function"""
 def tony(title):
     newString = " "
     ch = 0
