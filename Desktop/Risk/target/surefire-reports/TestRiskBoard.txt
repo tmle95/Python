@@ -1,0 +1,10 @@
+-------------------------------------------------------------------------------
+Test set: TestRiskBoard
+-------------------------------------------------------------------------------
+Tests run: 2, Failures: 0, Errors: 2, Skipped: 0, Time elapsed: 0.001 s <<< FAILURE! - in TestRiskBoard
+setNumOfArmies{String, int}  Time elapsed: 0 s  <<< ERROR!
+org.junit.jupiter.api.extension.ParameterResolutionException: No ParameterResolver registered for parameter [java.lang.String arg0] in method [public void TestRiskBoard.setNumOfArmies(java.lang.String,int)].
+
+setPlayer{String, Players}  Time elapsed: 0 s  <<< ERROR!
+org.junit.jupiter.api.extension.ParameterResolutionException: No ParameterResolver registered for parameter [java.lang.String arg0] in method [public void TestRiskBoard.setPlayer(java.lang.String,Players)].
+

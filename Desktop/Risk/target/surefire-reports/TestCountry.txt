@@ -1,0 +1,8 @@
+-------------------------------------------------------------------------------
+Test set: TestCountry
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.008 s <<< FAILURE! - in TestCountry
+unvalidCountry  Time elapsed: 0.004 s  <<< ERROR!
+java.lang.NullPointerException
+	at TestCountry.unvalidCountry(TestCountry.java:12)
+
