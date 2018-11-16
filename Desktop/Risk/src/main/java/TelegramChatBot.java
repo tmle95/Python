@@ -1,26 +1,16 @@
-/*             <dependency>
-            <groupId>org.telegram</groupId>
-            <artifactId>telegrambots</artifactId>
-            <version>4.1</version>
-        </dependency>
-        */
-
-
-
-/*import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-
-public class TelegramBot extends TelegramLongPollingBot {
+public class TelegramChatBot extends TelegramLongPollingBot {
 
     private String message;
     private long chatID = 0;
 
     @Override
     public void onUpdateReceived(Update update) {
-        // We check if the update has a message and the message has text
+        //check if there is a message for update and that there is text
         if (update.hasMessage() && update.getMessage().hasText()) {
             message = update.getMessage().getText();
         }
@@ -50,11 +40,11 @@ public class TelegramBot extends TelegramLongPollingBot {
                 e.printStackTrace();
             }
         }
-        SendMessage message = new SendMessage() // Create a SendMessage object with mandatory fields
+        SendMessage message = new SendMessage() // Create a SendMessage object
                 .setChatId(chatID)
                 .setText(messageToSend);
         try {
-            execute(message); // Call method to send the message
+            execute(message); // method to send message
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
@@ -63,4 +53,5 @@ public class TelegramBot extends TelegramLongPollingBot {
     public void clearMessage() {
         message = null;
     }
-}*/
+}
+

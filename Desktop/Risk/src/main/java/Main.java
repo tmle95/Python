@@ -8,27 +8,26 @@ import java.lang.StringBuilder;
 import java.util.Arrays;
 import java.util.Collections;
 
-/*import org.telegram.telegrambots.ApiContextInitializer;
+import org.telegram.telegrambots.ApiContextInitializer;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;*/
-
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import twitter4j.TwitterException;
 
 public class Main {
+  public static void main(String[] args) throws TwitterException, IOException, TelegramApiException {
 
-  public static void main(String[] args) throws TwitterException, IOException {
-	  
-	  /*ApiContextInitializer.init();
+      ApiContextInitializer.init();
       TelegramBotsApi telegramBotsApi = new TelegramBotsApi();
-      TelegramBot telegramBot = new TelegramBot();
+      TelegramChatBot telegramChatBot = new TelegramChatBot();
       try {
-          telegramBotsApi.registerBot(telegramBot);
+          telegramBotsApi.registerBot(telegramChatBot);
       } catch (TelegramApiException e) {
           e.printStackTrace();
       }
-      telegramBot.sendMessage("Hi, let' start the game");
-      */
-      
+
+      telegramChatBot.sendMessage("Start Game");
+
+
 	  String countryFile = "Countries.txt";
 	  String continentFile = "Continents.txt";
 	  String borderingCountryFile  = "BorderingCountries.txt";
@@ -43,6 +42,9 @@ public class Main {
 	  boolean createdBoard;
 
     PostTwitter postTwitter = new PostTwitter();
+
+    Thread threadTimeOut; // Will need to create a new thread for the timer
+    TimeoutPlayer timeoutPlayer = new TimeoutPlayer(30);
 
 
 	  createdBoard = false;
@@ -89,8 +91,8 @@ public class Main {
     int nColor = 0;
     int nArmies = 0;
 
-    String sUserInput;
-    int nUserInput;
+    String sUserInput = "nothing";
+    int nUserInput = -100;
 
     Players[] players;
     Dice dice = new Dice();
@@ -370,7 +372,7 @@ public class Main {
     while(bGameRunning) {
       bPlayerTurn = true;
       // Check if any player has conquers all the country
-      
+
       // Twitter Message
       nNumberOfTurns++;
       try{
@@ -379,170 +381,76 @@ public class Main {
         System.out.println("Did not post to twitter.");
       }
 
-      switch(nPlayerTurn) {
-        case 0:
-        	
-          while(bPlayerTurn)
-          {
-        	purchaseCredits(players[0]);
-        	purchaseCards(players[0], Board);
-        	purchaseUndo(players[0]);
-        	transferCredits(players[0], Board, nNumPlayers, players);
-        	attackTerritory(players[0], Board, dice, players);
-            System.out.println(players[nPlayerTurn].getName() + ", what would you like to do?");
-            System.out.println("Press \'1\' to fortify");
-            System.out.println("Press \'-1\' to end turn");
-            System.out.println("What would you like to do?");
-            sc = new Scanner(System.in);
-            sUserInput = sc.nextLine();
-            // Getting and placing new armies.
-            // Attacking.
-            //attackTerritory(players[nPlayerTurn], Board, dice);
-            // Fortifying your position.
-            if(sUserInput.equals("1"))
-              fortifyArmy(players[nPlayerTurn], Board);
-            if(sUserInput.equals("-1"))
-              bPlayerTurn = false;
-          }
-   
-        break;
+      // Creating thread for Timer
+      boolean bTimeOut = false;
+      threadTimeOut = new Thread(new TimeoutPlayer(30));
+      threadTimeOut.start();
 
-        case 1:
-        while(bPlayerTurn)
-        {
+      while(bPlayerTurn)
+      {
+        if(threadTimeOut.isAlive())
+      	  purchaseCredits(players[nPlayerTurn], timeoutPlayer.getTimeLeft());
+        if(threadTimeOut.isAlive())
+      	 purchaseCards(players[nPlayerTurn], Board, timeoutPlayer.getTimeLeft());
+        if(threadTimeOut.isAlive())
+      	 purchaseUndo(players[nPlayerTurn], timeoutPlayer.getTimeLeft());
+        if(threadTimeOut.isAlive())
+      	 transferCredits(players[nPlayerTurn], Board, nNumPlayers, players, timeoutPlayer.getTimeLeft());
+        if(threadTimeOut.isAlive())
+      	 attackTerritory(players[nPlayerTurn], Board, dice, players, timeoutPlayer.getTimeLeft());
+
+        if(threadTimeOut.isAlive()) {
           System.out.println(players[nPlayerTurn].getName() + ", what would you like to do?");
           System.out.println("Press \'1\' to fortify");
           System.out.println("Press \'-1\' to end turn");
           System.out.println("What would you like to do?");
           sc = new Scanner(System.in);
           sUserInput = sc.nextLine();
-          // Getting and placing new armies.
-          // Attacking.
-          //attackTerritory(players[nPlayerTurn], Board, dice);
-          // Fortifying your position.
-          if(sUserInput.equals("1"))
-            fortifyArmy(players[nPlayerTurn], Board);
-          
-          if(sUserInput.equals("-1"))
-            bPlayerTurn = false;
-        }
-        //purchaseCredits(players[1]);
-        //purchaseCards(players[1], Board);
-        //transferCredits(players[1], Board, nNumPlayers, players);
-        //attackTerritory(players[1], Board, dice, players);
-        break;
-
-        case 2:
-        while(bPlayerTurn)
-        {
-          System.out.println(players[nPlayerTurn].getName() + ", what would you like to do?");
-          System.out.println("Press \'1\' to fortify");
-          System.out.println("Press \'-1\' to end turn");
-          System.out.println("What would you like to do?");
-          sc = new Scanner(System.in);
-          sUserInput = sc.nextLine();
-          // Getting and placing new armies.
-          // Attacking.
-          //attackTerritory(players[nPlayerTurn], Board, dice);
-          // Fortifying your position.
-          if(sUserInput.equals("1"))
-            fortifyArmy(players[nPlayerTurn], Board);
-          if(sUserInput.equals("-1"))
-            bPlayerTurn = false;
-        }
-        attackTerritory(players[2], Board, dice, players);
-        break;
-
-        case 3:
-        while(bPlayerTurn)
-        {
-          System.out.println(players[nPlayerTurn].getName() + ", what would you like to do?");
-          System.out.println("Press \'1\' to fortify");
-          System.out.println("Press \'-1\' to end turn");
-          System.out.println("What would you like to do?");
-          sc = new Scanner(System.in);
-          sUserInput = sc.nextLine();
-          // Getting and placing new armies.
-          // Attacking.
-          //attackTerritory(players[nPlayerTurn], Board, dice);
-          // Fortifying your position.
-          if(sUserInput.equals("1"))
-            fortifyArmy(players[nPlayerTurn], Board);
-          if(sUserInput.equals("-1"))
-            bPlayerTurn = false;
-        }
-        attackTerritory(players[3], Board, dice, players);
-        break;
-
-        case 4:
-        while(bPlayerTurn)
-        {
-          System.out.println(players[nPlayerTurn].getName() + ", what would you like to do?");
-          System.out.println("Press \'1\' to fortify");
-          System.out.println("Press \'-1\' to end turn");
-          System.out.println("What would you like to do?");
-          sc = new Scanner(System.in);
-          sUserInput = sc.nextLine();
-          // Getting and placing new armies.
-          // Attacking.
-          //attackTerritory(players[nPlayerTurn], Board, dice);
-          // Fortifying your position.
-          if(sUserInput.equals("1"))
-            fortifyArmy(players[nPlayerTurn], Board);
-          if(sUserInput.equals("-1"))
-            bPlayerTurn = false;
-        }
-        attackTerritory(players[4], Board, dice, players);
-        break;
-
-        case 5:
-        while(bPlayerTurn)
-        {
-          System.out.println(players[nPlayerTurn].getName() + ", what would you like to do?");
-          System.out.println("Press \'1\' to fortify");
-          System.out.println("Press \'-1\' to end turn");
-          System.out.println("What would you like to do?");
-          sc = new Scanner(System.in);
-          sUserInput = sc.nextLine();
-          // Getting and placing new armies.
-          // Attacking.
-          //attackTerritory(players[nPlayerTurn], Board, dice);
-          // Fortifying your position.
-          if(sUserInput.equals("1"))
-            fortifyArmy(players[nPlayerTurn], Board);
-          if(sUserInput.equals("-1"))
-            bPlayerTurn = false;
         }
 
-      attackTerritory(players[5], Board, dice, players);
-      break;
+        // Getting and placing new armies.
+        // Attacking.
+        if(threadTimeOut.isAlive())
+          attackTerritory(players[nPlayerTurn], Board, dice, players, timeoutPlayer.getTimeLeft());
+        // Fortifying your position.
+        if(sUserInput.equals("1"))
+          fortifyArmy(players[nPlayerTurn], Board, timeoutPlayer.getTimeLeft());
+        if(sUserInput.equals("-1"))
+          bPlayerTurn = false;
 
-      default:
-      // Getting and placing new armies.
-      // Attacking.
-      attackTerritory(players[5], Board, dice, players);
-      // Fortifying your position.
-      break;
-    }
-      
+
+        bPlayerTurn = threadTimeOut.isAlive();
+        if(threadTimeOut.isAlive() == false) {
+          System.out.println("Skipping turn... 30 seconds passed");
+        }else{
+          System.out.println("NOT ALIVE");
+        }
+      }
+
+      //attackTerritory(players[nPlayerTurn], Board, dice, players, timeoutPlayer.getTimeLeft());
+
     // Twitter Message
       try{
         postTwitter.TweetOnTwitter(postMessage(2, nNumberOfTurns, players, nNumPlayers, postTwitter));
       }catch (TwitterException e) {
         System.out.println("Did not post to twitter.");
       }
-    
-    
+
+
       // Player take turn
       if(nPlayerTurn < nNumPlayers-1)
         nPlayerTurn++;
       else
         nPlayerTurn = 0;
-   
+
   }
 }
 
-public static void purchaseCredits(Players player) {
+public static void purchaseCredits(Players player, float ftimeLeft) {
+  Thread threadTimeOut;
+  threadTimeOut = new Thread(new TimeoutPlayer(ftimeLeft));
+  threadTimeOut.start();
+
 	boolean purchasing = true;
 	Scanner sc;
 	String sUserInput;
@@ -552,15 +460,32 @@ public static void purchaseCredits(Players player) {
 		System.out.println("\nPlayer : " + player.getName() + " would you like to purchase credits? (y/n)");
 		sc = new Scanner(System.in);
 		sUserInput = sc.nextLine();
+
+    if(threadTimeOut.isAlive() == false) {
+      System.out.println("Skipping turn... 30 seconds passed");
+      return;
+    }
+
 		if(sUserInput.equals("y")) {
 			System.out.println("How many would you like to buy? Price rate: $1 = 1 credit");
 			sc = new Scanner(System.in);
+
+      if(threadTimeOut.isAlive() == false) {
+        System.out.println("Skipping turn... 30 seconds passed");
+        return;
+      }
+
 			//checks to make sure input is an integer
 			do {
 				while(!sc.hasNextInt()) {
 					System.out.println("Transaction error: That is not a valid number");
 					System.out.println("Please enter the number of credits you would like to buy");
 					sc.next();
+
+          if(threadTimeOut.isAlive() == false) {
+            System.out.println("Skipping turn... 30 seconds passed");
+            return;
+          }
 				}
 				nUserInput = sc.nextInt();
 			}while(nUserInput <= 0);
@@ -573,7 +498,11 @@ public static void purchaseCredits(Players player) {
 		}
 	}
 }
-public static void purchaseCards(Players player, RiskBoard Board) {
+public static void purchaseCards(Players player, RiskBoard Board, float ftimeLeft) {
+  Thread threadTimeOut;
+  threadTimeOut = new Thread(new TimeoutPlayer(ftimeLeft));
+  threadTimeOut.start();
+
 	boolean purchasing = true;
 	Scanner sc;
 	String countryInput;
@@ -591,15 +520,27 @@ public static void purchaseCards(Players player, RiskBoard Board) {
 		System.out.println("1. List available credits ");
 		sc = new Scanner(System.in);
 		sUserInput = sc.nextLine();
+
+    if(threadTimeOut.isAlive() == false) {
+      System.out.println("Skipping turn... 30 seconds passed");
+      return;
+    }
+
 		if(sUserInput.equals("1")) {
 			System.out.println("Total available credits: " + player.getNumOfCredits());
 		}
 		if(sUserInput.equals("y")) {
 			//Do you have to own the country to purchase a card for?
-			
+
 			System.out.println("\nWhich country would you like this territory card for?");
 			sc = new Scanner(System.in);
 			countryInput = sc.nextLine();
+
+      if(threadTimeOut.isAlive() == false) {
+        System.out.println("Skipping turn... 30 seconds passed");
+        return;
+      }
+
 			//Checks if input is a valid country in the board
 	        for(int i = 0; i < Board.returnCountries().size(); i++) {
 	            if(countryInput.equals(Board.returnCountries().get(i).getName())){
@@ -613,6 +554,12 @@ public static void purchaseCards(Players player, RiskBoard Board) {
 				System.out.println("\nWould you like Infantry($1), Cavalry($5), or Artillery($10) army type for this territory card?");
 				sc = new Scanner(System.in);
 				armyInput = sc.nextLine();
+
+        if(threadTimeOut.isAlive() == false) {
+          System.out.println("Skipping turn... 30 seconds passed");
+          return;
+        }
+
 				//checks if player has enough credits to buy for each army type
 				if(armyInput.equals("Infantry") || armyInput.equals("Cavalry") || armyInput.equals("Artillery")) {
 					if(armyInput.equals("Infantry")) {
@@ -668,7 +615,11 @@ public static void purchaseCards(Players player, RiskBoard Board) {
 	}
 }
 
-public static void purchaseUndo(Players player) {
+public static void purchaseUndo(Players player, float ftimeLeft) {
+  Thread threadTimeOut;
+  threadTimeOut = new Thread(new TimeoutPlayer(ftimeLeft));
+  threadTimeOut.start();
+
 	boolean purchasing = true;
 	Scanner sc;
 	int nUserInput;
@@ -677,7 +628,12 @@ public static void purchaseUndo(Players player) {
 		System.out.println("\nPlayer : " + player.getName() + " would you like to purchase any Undos? (y/n)");
 		sc = new Scanner(System.in);
 		sUserInput = sc.nextLine();
-		
+
+    if(threadTimeOut.isAlive() == false) {
+      System.out.println("Skipping turn... 30 seconds passed");
+      return;
+    }
+
 		if(sUserInput.equals("y")) {
 			System.out.println("How many would you like to buy? Price rate: 1 Undo = 20 credit");
 			sc = new Scanner(System.in);
@@ -686,26 +642,35 @@ public static void purchaseUndo(Players player) {
 					System.out.println("Transaction error: That is not a valid number");
 					System.out.println("Please enter the number of Undos you would like to buy");
 					sc.next();
+
+          if(threadTimeOut.isAlive() == false) {
+            System.out.println("Skipping turn... 30 seconds passed");
+            return;
+          }
 				}
 				nUserInput = sc.nextInt();
 			}while(nUserInput <= 0);
 				System.out.println("\nPurchasing Undo(s).........");
-				//Checks if player has enough credits 
+				//Checks if player has enough credits
 				if(player.getNumOfCredits() < (nUserInput*20)) {
 					System.out.println("\nTransaction error: You do not have enough credits to buy " + nUserInput + " Undo(s)");
 					continue;
 				}
 				System.out.println("Purchase successful!");
-				player.gainUndo(nUserInput);				
+				player.gainUndo(nUserInput);
 		}
-		
+
 		if(sUserInput.equals("n")) {
 			return;
 		}
 	}
 }
 
-public static void transferCredits(Players player, RiskBoard Board, int nNumPlayers, Players[] players) {
+public static void transferCredits(Players player, RiskBoard Board, int nNumPlayers, Players[] players, float ftimeLeft) {
+  Thread threadTimeOut;
+  threadTimeOut = new Thread(new TimeoutPlayer(ftimeLeft));
+  threadTimeOut.start();
+
 	boolean transfer = true;
 	boolean canTransfer = false;
 	Scanner sc;
@@ -716,6 +681,12 @@ public static void transferCredits(Players player, RiskBoard Board, int nNumPlay
 		System.out.println("\nPlayer: " + player.getName() + " would you like to transfer any of your credits to another player? (y/n)");
 		sc = new Scanner(System.in);
 		sUserInput = sc.nextLine();
+
+    if(threadTimeOut.isAlive() == false) {
+      System.out.println("Skipping turn... 30 seconds passed");
+      return;
+    }
+
 		if(sUserInput.equals("y")) {
 			System.out.println("Who would you like to transfer credits to?");
 			System.out.println("1. List of players");
@@ -740,6 +711,11 @@ public static void transferCredits(Players player, RiskBoard Board, int nNumPlay
 							System.out.println("\nTransfer error: Not a valid number input");
 							System.out.println("Please enter a valid number of credits you would like to transfer");
 							sc.next();
+
+              if(threadTimeOut.isAlive() == false) {
+                System.out.println("Skipping turn... 30 seconds passed");
+                return;
+              }
 						}
 						nCreditsInput = sc.nextInt();
 					}while(nCreditsInput <= 0);
@@ -760,7 +736,11 @@ public static void transferCredits(Players player, RiskBoard Board, int nNumPlay
 		}
 	}
 }
-public static void attackTerritory(Players player, RiskBoard Board, Dice dice, Players[] players) {
+public static void attackTerritory(Players player, RiskBoard Board, Dice dice, Players[] players, float ftimeLeft) {
+  Thread threadTimeOut;
+  threadTimeOut = new Thread(new TimeoutPlayer(ftimeLeft));
+  threadTimeOut.start();
+
 	boolean attacking = true;
     boolean validBorderCountry = false;
     boolean isOpponent = false;
@@ -789,13 +769,19 @@ public static void attackTerritory(Players player, RiskBoard Board, Dice dice, P
     	System.out.println("1. list countries you currently occupy");
     	sc = new Scanner(System.in);
     	atkCountryInput = sc.nextLine();
+
+      if(threadTimeOut.isAlive() == false) {
+        System.out.println("Skipping turn... 30 seconds passed");
+        return;
+      }
+
     	if(atkCountryInput.equals("1")) {
     		//Displays list of countries that belongs to player
     		for(int i = 0;i < player.countriesPlayerHas().size();i++) {
     			System.out.println(player.countriesPlayerHas().get(i).getName());
     		}
     	}
-    	
+
     	for(int i = 0;i < player.countriesPlayerHas().size();i++) {
     		//Checks if country belongs to player
     		if(atkCountryInput.equals(player.countriesPlayerHas().get(i).getName())) {
@@ -812,6 +798,12 @@ public static void attackTerritory(Players player, RiskBoard Board, Dice dice, P
     		System.out.println("1. List countries nearby: " + atkCountryInput);
     		sc = new Scanner(System.in);
 			defCountryInput = sc.nextLine();
+
+        if(threadTimeOut.isAlive() == false) {
+          System.out.println("Skipping turn... 30 seconds passed");
+          return;
+        }
+
     		if(defCountryInput.equals("1")) {
     			//Displays list of countries adjacent to country player is attacking from
     			for(int j = 0 ; j < Board.returnBorders(atkCountryInput).size(); j++) {
@@ -836,13 +828,19 @@ public static void attackTerritory(Players player, RiskBoard Board, Dice dice, P
 	    	if(!validBorderCountry) {
 	    		System.out.println("\nThis country is not bordering " + atkCountryInput + " or check spelling of country");
 	    	}
-	    	
+
 	    	while(isOpponent) {
           System.out.println("\nCommencing Attack!");
           subject.setState(1);
 	    		System.out.println("Player: " + player.getName() + "'s armies from " + atkCountryInput + " will be attacking Player: " + Board.returnPlayer(defCountryInput).getName() + "'s armies in " + defCountryInput);
 	    		System.out.println("\n" + player.getName() + ", How many dices would you like to roll to attack?");
     			sc = new Scanner(System.in);
+
+          if(threadTimeOut.isAlive() == false) {
+            System.out.println("Skipping turn... 30 seconds passed");
+            return;
+          }
+
     			do {
     				while(!sc.hasNextInt()) {
     					System.out.println("\nNot a valid number to roll");
@@ -863,6 +861,12 @@ public static void attackTerritory(Players player, RiskBoard Board, Dice dice, P
 	    		while(validAtkRoll) {
 	    			System.out.println("\n" + Board.returnPlayer(defCountryInput).getName() + " , how many dices would you like to roll to defend?");
 	    			sc = new Scanner(System.in);
+
+            if(threadTimeOut.isAlive() == false) {
+              System.out.println("Skipping turn... 30 seconds passed");
+              return;
+            }
+
 	    			do {
 	    				while(!sc.hasNextInt()) {
 	    					System.out.println("\nNot a valid number to roll");
@@ -922,7 +926,7 @@ public static void attackTerritory(Players player, RiskBoard Board, Dice dice, P
 			    					System.out.println("\nNext Highest Pair Roll: ");
 		    						defArmyLoss++;
 			    					System.out.println(player.getName() + " rolled " + nAtkRolls[i]);
-			    					System.out.println(Board.returnPlayer(defCountryInput).getName() + " rolled " + nDefRolls[i]);    					
+			    					System.out.println(Board.returnPlayer(defCountryInput).getName() + " rolled " + nDefRolls[i]);
 		    					}
 		    					else if(nAtkRolls[i+1] < nDefRolls[i+1]) {
 		    						System.out.println("\nNext Highest Pair Roll: ");
@@ -935,30 +939,34 @@ public static void attackTerritory(Players player, RiskBoard Board, Dice dice, P
 	    				System.out.println("\nBattle Report: ");
 	    				Board.returnNameOfCountry(atkCountryInput).decArmies(atkArmyLoss);
 	    				Board.returnNameOfCountry(defCountryInput).decArmies(defArmyLoss);
-	    				
+
 	    				if(Board.returnNameOfCountry(defCountryInput).getArmies() < 1) {
 	    					System.out.println("\n\n\n\n\n\n\n\n\nGame Announcement: Player: " + player.getName() + " has eliminated all of Player:" + Board.returnPlayer(defCountryInput).getName() + "'s armies in " + Board.returnNameOfCountry(defCountryInput).getName() + " and now has posession of the country!");
 	    					Board.returnPlayer(defCountryInput).lostCountry(defCountryInput);
 	    					player.gainCountry(Board.returnNameOfCountry(defCountryInput));
-	    					
+
 	    					if(Board.returnPlayer(defCountryInput).countriesPlayerHas().size() == 0) {
 	    						System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\nGame Announcement: Player: " + Board.returnPlayer(defCountryInput).getName() + " has lost all of their territories and will be removed from the game!");
 	    					}
-	    					
+
 	    				}
-	    				
+
 	    				return;
 
 	    			}
 	    		}
-	    	}	
+	    	}
 		}
     }
 }
-		
 
 
-  public static void fortifyArmy(Players player, RiskBoard Board) {
+
+  public static void fortifyArmy(Players player, RiskBoard Board, float ftimeLeft) {
+    Thread threadTimeOut;
+    threadTimeOut = new Thread(new TimeoutPlayer(ftimeLeft));
+    threadTimeOut.start();
+
     boolean bFortify = true;
     String sUserInputCountry;
     String sUserInputAdjacent;
@@ -970,12 +978,18 @@ public static void attackTerritory(Players player, RiskBoard Board, Dice dice, P
       sc = new Scanner(System.in);
       sUserInputCountry = sc.nextLine();
 
+      if(threadTimeOut.isAlive() == false) {
+        System.out.println("Skipping turn... 30 seconds passed");
+        return;
+      }
+
       if(sUserInputCountry.equals("1"))
       {
         for(int i = 0; i < Board.returnVacancy().size(); i++) {
             System.out.println(Board.returnVacancy().get(i).getName());
         }
       }
+
       if(sUserInputCountry.equals("-1"))
       {
         bFortify = false;
@@ -1003,6 +1017,11 @@ public static void attackTerritory(Players player, RiskBoard Board, Dice dice, P
         System.out.println("Which adjacent of " + sUserInputCountry + " do you want to fortify?");
         sc = new Scanner(System.in);
         sUserInputAdjacent = sc.nextLine();
+
+        if(threadTimeOut.isAlive() == false) {
+          System.out.println("Skipping turn... 30 seconds passed");
+          return;
+        }
 
         if(sUserInputAdjacent.equals("1"))
         {
@@ -1032,6 +1051,11 @@ public static void attackTerritory(Players player, RiskBoard Board, Dice dice, P
           System.out.println("How many troops would you like to add " + sUserInputCountry + " to " + sUserInputAdjacent + "?");
           sc = new Scanner(System.in);
           nUserInput = sc.nextInt();
+
+          if(threadTimeOut.isAlive() == false) {
+            System.out.println("Skipping turn... 30 seconds passed");
+            return;
+          }
 
           // Display how many armies does the country have
           if(sUserInputCountry.equals("-1"))
@@ -1082,6 +1106,7 @@ public static void attackTerritory(Players player, RiskBoard Board, Dice dice, P
   }
 
   public static String postMessage(int beginTurn, int nNumberOfTurns, Players[] player, int nNumPlayers, PostTwitter postTwitter) {
+
     int territories = 0;
     String message = "";
     if(beginTurn == 1) {
